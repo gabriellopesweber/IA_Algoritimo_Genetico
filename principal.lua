@@ -2,30 +2,69 @@
 --- 'Modelos Evolucionários e Tratamento de Incertezas'
 
 TAMANHO_CAIBRO = 500
-PEDIDOS = 150
-DIVISAO = 6
-ERAS = 100
+PEDIDOS = 200
+DIVISAO = 5
+ERAS = 200
 MEDIDA = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100}
 PEDIDO_ALEATORIO = {}
 
 SISTEMA_LOG = false
+LOG = ""
 
 for i = 1, PEDIDOS, 1 do -- Esta loop realiza a criação de um array vazio de acordo com o tamanho de pedidos definidos
     table.insert(PEDIDO_ALEATORIO, i, {})
 end
 
 function Main()
-    print("Iniciando execucao")
+    local EXIBIR = 10
+    print(" - Iniciando execucao - ")
     GerarPedido()
-    ExibirPedido()
-    OrderdarDecrecente()
-    ExibirPedido()
-end
-
-function Mutacao()
+    for i = 1, ERAS, 1 do
+        OrderdarDecrecente()
+        ExibirPedido(EXIBIR, true, i)
+        CrossOver()
+    end
+    print(" - Fim da execucao - ")
 end
 
 function CrossOver()
+    local tempAtual = {{}}
+    for i = 1, DIVISAO, 1 do -- Esta loop realiza a criação de um array vazio de acordo com o tamanho de pedidos definidos
+        table.insert(tempAtual, i, {})
+    end
+    local msg = ""
+    for p = 1, #PEDIDO_ALEATORIO, 1 do
+        for o = 1, DIVISAO, 1 do
+            msg = msg .. "[DEBUG] -> Valor do O: " .. o .. "\n"
+            if o == DIVISAO then
+                msg =
+                    msg ..
+                    "[DEBUG] -> Realizando insercao no indereco [" ..
+                        o .. "] pedido: " .. tostring(PEDIDO_ALEATORIO[1][o]) .. "\n"
+                table.insert(tempAtual[p], o, PEDIDO_ALEATORIO[1][o])
+            else
+                msg =
+                    msg ..
+                    "[DEBUG] -> Realizando insercao no indereco [" ..
+                        o .. "] pedido: " .. tostring(PEDIDO_ALEATORIO[p][o + 1]) .. "\n"
+                table.insert(tempAtual[p], o, PEDIDO_ALEATORIO[p][o + 1])
+            end
+        end
+        for i = DIVISAO + 1, #PEDIDO_ALEATORIO[1], 1 do
+            msg = msg .. "[DEBUG] -> Valor do I: " .. i .. "\n"
+            msg =
+                msg ..
+                "[DEBUG] -> Realizando insercao no indereco [" .. i .. "] pedido: " .. PEDIDO_ALEATORIO[p][i] .. "\n"
+
+            table.insert(tempAtual[p], i, PEDIDO_ALEATORIO[p][i])
+        end
+        if p == DIVISAO then
+            break
+        end
+    end
+    for indice, valor in ipairs(tempAtual) do
+        table.insert(PEDIDO_ALEATORIO, indice, valor)
+    end
 end
 
 function ExibirPedidoOrdenado()
@@ -167,30 +206,58 @@ function ExibirComp(list)
     return msg
 end
 
-function ExibirPedido()
+function ExibirPedido_list(list)
     local msg = ""
-    local f = io.open("./log.txt", "w+")
     msg = msg .. " -- Listando Pedidos -- \n\tTamanho: "
     for indice, valor in pairs(MEDIDA) do
         msg = msg .. "\t[" .. indice .. "] " .. valor .. "\t"
     end
-    for i = 1, #PEDIDO_ALEATORIO, 1 do
+
+    msg = msg .. "Total"
+    msg = msg .. "\n"
+    for i = 1, #list, 1 do
         local cont = 0
-        msg = msg .. "\n\tItem" .. i .. "\t"
-        for indice, valor in pairs(PEDIDO_ALEATORIO[i]) do
-            msg = msg .. "\t[" .. indice .. "] "
+        msg = msg .. "\tItem" .. i .. "\t\t"
+        for indice, valor in ipairs(list[i]) do
             if valor == 1 then
-                msg = msg .. "true"
+                msg = msg .. "[" .. indice .. "] true\t"
                 cont = cont + MEDIDA[indice]
             else
-                msg = msg .. "false"
+                msg = msg .. "[" .. indice .. "] false\t"
             end
         end
-        msg = msg .. "\t Total: " .. cont .. "\t"
+        msg = msg .. cont .. "\n"
+    end
+    return msg
+end
+
+function ExibirPedido(vlr_exibir, exibir, erax)
+    local era = erax
+    LOG = LOG .. "\n"
+    local f = io.open("./log.txt", "w+")
+    LOG = LOG .. " ERA: " .. era .. "\n\n\tTamanho: "
+    for indice, valor in pairs(MEDIDA) do
+        LOG = LOG .. "\t[" .. indice .. "] " .. valor .. "\t"
+    end
+    LOG = LOG .. "Total"
+    for i = 1, 50, 1 do
+        local cont = 0
+        LOG = LOG .. "\n\tItem" .. i .. "\t"
+        for indice, valor in pairs(PEDIDO_ALEATORIO[i]) do
+            LOG = LOG .. "\t[" .. indice .. "] "
+            if valor == 1 then
+                LOG = LOG .. "true"
+                cont = cont + MEDIDA[indice]
+            else
+                LOG = LOG .. "false"
+            end
+        end
+        LOG = LOG .. "\t" .. cont .. "\t"
     end
 
-    f:write(msg)
+    f:write(LOG)
     f:close()
+    return LOG
 end
 
 function GerarPedido()
